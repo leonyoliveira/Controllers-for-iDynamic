@@ -1,6 +1,8 @@
 from ControlLib import *
-from EDO import rungekutta4
+from runkut4_adrc import *
+from functools import partial
 import numpy as np
+import os
 import csv
 
 class LinearADRC(Control): 
@@ -10,12 +12,11 @@ class LinearADRC(Control):
 		self.s_cl = s_cl
 		self.s_eso = s_eso
 		self.b0 = b0
-		self.A, self.B, self.C, self.sys_pol, self.eso_pol, self.x_t = self.controller_matrices()
-		self.u_t = []
-		self.t_sim = []
-		self.y_t = []
-		self.r_t = []
-		self.filename = str(order) + str(b0) + str(s_cl) + str(s_eso) + ".csv"
+		self.A, self.B, self.C, self.K, self.L, self.x_t = self.controller_matrices()
+		self.A_obs = self.A - np.matmul(self.L , self.C)
+		self.filename = "sim_results_adrc/l_" + str(order) + "_" + str(b0) + "_" + str(s_cl) + "_" + str(s_eso) + "_" + ".csv"
+		if not os.path.isdir("sim_results_adrc"):
+			os.mkdir("sim_results_adrc")
 		with open(self.filename, 'w') as file:
 			fields = ['t', 'r(t)', 'y(t)', 'u(t)']
 			writer = csv.DictWriter(file, fieldnames=fields)
@@ -35,39 +36,22 @@ class LinearADRC(Control):
 			sys_pol = np.polymul(sys_pol, sys_base_pol)
 			eso_pol = np.polymul(eso_pol, eso_base_pol)
 		B[self.order-1][0] = self.b0
-
-		return A, B, C, sys_pol, eso_pol, x_t
+		K = np.flip(sys_pol)[:self.order]
+		L = np.array([eso_pol]).T[1:]
+		return A, B, C, K, L, x_t
 
 	def control(self):
-		""" 
-		Return the control signal.
-		You can access the error at instant 0, -1, and -2 as:
-		self.e(0), self.e(-1) and self.e(-2) respectively 
-
-		Obs.: To access more errors, create your controller with the 
-		command:
-		controller = MyControllerName(T, n)		
-		where T is the sampling time (normally 0.3) and n is the order 
-		of the controller (how many errors you can access)
-		For instance:
-
-		controller = MyControllerName(0.5, 6)
-
-		Will use a controller with 0.5s sampling time and will access
-		from self.e(0) up to self.e(-5)
-		"""
-		A_obs = self.A - np.matmul(np.array([self.eso_pol]).T[1:], self.C)
-		self.x_t = rungekutta4(self.T, A_obs, self.B, np.array([self.eso_pol]).T[1:], self.x_t, self.u(), self.y())
+		leso = partial(linear_extended_state_observer, self.A_obs, self.B, self.L, self.u(), self.y())
+		self.x_t = runkut4(leso, self.x_t, self.T)
 		u0 = 0
 		for i in range(self.order):
-			u0 += (self.r(-i) - self.x_t[i]) * self.sys_pol[self.order-i]
+			if i == 0:
+				u0 += (self.r(i) - self.x_t[i]) * self.K[i]
+			else:
+				u0 -= self.x_t[i] * self.K[i]
 
 		u = (u0 - self.x_t[self.order]) / self.b0
-
-		self.u_t.append(u[0])
-		self.y_t.append(self.y(0))
-		self.t_sim.append(self.t())
-		self.r_t.append(self.r(0))
+		
 		with open(self.filename, 'a+') as file:
 			fields = ['t', 'r(t)', 'y(t)', 'u(t)']
 			writer = csv.DictWriter(file, fieldnames=fields)
