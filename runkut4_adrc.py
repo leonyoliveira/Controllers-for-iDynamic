@@ -11,7 +11,7 @@ def linear_tracking_differentiator(A, B, r, v):
     return np.matmul(A, v) + B * r
 
 def linear_extended_state_observer(A, B, L, u, y, x):
-    return np.matmul(A, x) + B * u + L * y
+    return np.matmul(A, x) + B * u + L * (y - x[0])
 
 def nonlinear_tracking_differentiator(r, R, v):
     v1 = v[1][0]
