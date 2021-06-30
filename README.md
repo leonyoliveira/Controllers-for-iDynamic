@@ -18,5 +18,14 @@ Included controllers:
 * PID
 * Linear ADRC
 
-Scripts with termination "_gui_" run as graphic user interface to set the controller parameters.
-Scripts with 
+Scripts with name finished in "_gui_" run an graphic user interface to set the controller parameters.
+
+Scripts with name finished in "_plot\_evaluate_" saves graphics of control signal and output signal from simulations, and calculate it's following perfomance indexes:
+
+* IAE
+* ISE
+* ITAE
+* Goodhart Index
+* RBEMCE
+* RBMSEMCE
+* Variability of output signal
