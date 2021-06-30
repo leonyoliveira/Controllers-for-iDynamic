@@ -1,4 +1,6 @@
-# ADRC-to-iDynamic
+# Controllers for iDynamic
+
+Implementations of controlles to be used with LACI's virtual control laboratory 'iDynamic', available on https://dev-mind.blog/apps/control_systems/iDynamic/index.html
 
 First, you should install the following libraries to run the scripts:
 
