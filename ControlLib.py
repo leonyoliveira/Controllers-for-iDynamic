@@ -1,5 +1,4 @@
 import asyncio
-from asyncio.events import new_event_loop
 import websockets
 from collections import deque
 from math import *
