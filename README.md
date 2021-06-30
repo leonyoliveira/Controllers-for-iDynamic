@@ -1,5 +1,6 @@
 # ADRC-to-iDynamic
 
+
 First, you should install the following libraries to run the scripts:
 
 pip install websockets
@@ -17,3 +18,9 @@ pip install kivy.deps.gstreamer
 pip install kivy.deps.angle
 
 pip install pandas
+
+
+Included controllers:
+
+* PID
+* Linear ADRC
