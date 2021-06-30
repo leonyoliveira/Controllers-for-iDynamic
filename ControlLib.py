@@ -1,8 +1,11 @@
 import asyncio
+from asyncio.events import new_event_loop
 import websockets
 from collections import deque
 from math import *
-import numpy as np
+import nest_asyncio
+
+nest_asyncio.apply()
 
 class Control:
 	def __init__(self, T=0.3, order=3):
@@ -73,7 +76,7 @@ class RemoteControl:
 			await asyncio.sleep(self.controller.T)
 
 			self.controller.time += self.controller.T
-
+			#print("running")
 			try:
 
 				print('get references') if self.verbose else None
@@ -102,7 +105,7 @@ class RemoteControl:
 				self.controller.measured(out)
 
 				u = self.controller.control()
-
+				
 				self.controller.apply(u)
 
 
@@ -112,18 +115,17 @@ class RemoteControl:
 				print(f'u = {u}') if self.verbose else None
 				await websocket.send('set input|'+f"{u}")
 
-
 				print('%.4f %.4f %.4f %.4f'%(self.controller.time, ref, out, u))				
 
 			except:
 				print('System not active...') if self.verbose else None
 
-	def run(self):
-
+	async def run(self):
+		print("Starting server...")
 		server = websockets.serve(self.serverLoop, "localhost", 6660)
-
+		print("Server started!")
 		asyncio.get_event_loop().run_until_complete(server)
-		asyncio.get_event_loop().run_forever()
+		#asyncio.get_event_loop().run_forever()
 
 
 
