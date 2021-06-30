@@ -17,3 +17,6 @@ Included controllers:
 
 * PID
 * Linear ADRC
+
+Scripts with termination "_gui_" run as graphic user interface to set the controller parameters.
+Scripts with 
