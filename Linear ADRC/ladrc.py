@@ -1,9 +1,13 @@
+import os, sys
+currentdir = os.path.dirname(os.path.realpath(__file__))
+parentdir = os.path.dirname(currentdir)
+sys.path.append(parentdir)
+
 from ControlLib import *
 from runkut4_adrc import *
 from functools import partial
 import numpy as np
 import math
-import os
 import csv
 
 class LADRC(Control): 
