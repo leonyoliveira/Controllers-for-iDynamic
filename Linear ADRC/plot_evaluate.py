@@ -1,17 +1,24 @@
 import matplotlib.pyplot as plt
 import pandas as pd
 import os
+import numpy as np
 from pandas.core.frame import DataFrame
+
+currentdir = os.path.dirname(os.path.realpath(__file__))
+datadir = os.path.join(currentdir, "sim_data_ladrc")
+plotdir = os.path.join(currentdir, "plot_data_ladrc")
+
+sim_time = 15
 
 performance = {'order': [], 'b0': [], 's_cl': [], 's_eso': [], 'R': [], 'iae': [], 'ise': [], 'itae': [],
                 'goodhart': [], 'rbemce': [], 'rbmsemce': [], 'variability': []}
 
-if os.path.isdir("sim_data_ladrc") and len(os.listdir("sim_data_ladrc")) > 0:
+if os.path.isdir(datadir) and len(os.listdir(datadir)) > 0:
 
-    if not os.path.isdir("plot_data_ladrc"):
-        os.mkdir("plot_data_ladrc")
+    if not os.path.isdir(plotdir):
+        os.mkdir(plotdir)
 
-    for x in os.listdir("./sim_data_ladrc"):
+    for x in os.listdir(datadir):
 
         if x.endswith(".csv"):
 
@@ -22,8 +29,8 @@ if os.path.isdir("sim_data_ladrc") and len(os.listdir("sim_data_ladrc")) > 0:
             performance['s_eso'].append(s_eso)
             performance['R'].append(R)
 
-            df = pd.read_csv("./sim_data_ladrc/" + x)
-            df = df[df['t'] <= 180]
+            df = pd.read_csv(datadir + "/" + x)
+            df = df[df['t'] <= sim_time]
             t = df['t']
             r = df['r(t)']
             y = df['y(t)']
@@ -31,16 +38,20 @@ if os.path.isdir("sim_data_ladrc") and len(os.listdir("sim_data_ladrc")) > 0:
 
             plt.plot(t, y, 'r', t, r, '--g')
             plt.xlabel('tempo(s)')
+            plt.ylabel('posição da massa (m)')
+            #plt.xticks([0, 10, 20, 30, 40, 50, 60, 70, 80, 90])
             plt.legend(['saída - y(t)', 'referência - r(t)'])
             plt.title('ADRC Linear - Ordem: ' + str(order) + ', $b_{0}$: ' + str(b0) + ', $s_{CL}$: ' + str(s_cl) + ', $s_{ESO}$: ' + str(s_eso) + ', R: ' + str(R))
-            plt.savefig("./plot_data_ladrc/output_" + str(order) + "_" + str(b0) + "_" + str(s_cl) + "_" + str(s_eso) + "_" + str(R) + ".png")
+            plt.savefig(plotdir + "/output_"+ str(order) + "_" + str(b0) + "_" + str(s_cl) + "_" + str(s_eso) + "_" + str(R) + ".png")
             plt.clf()
 
             plt.plot(t, u, 'b')
             plt.xlabel('tempo(s)')
+            plt.ylabel('posição do carrinho (m)')
+            #plt.xticks([0, 10, 20, 30, 40, 50, 60, 70, 80, 90])
             plt.legend(['sinal de controle - u(t)'])
             plt.title('ADRC Linear - Ordem: ' + str(order) + ', $b_{0}$: ' + str(b0) + ', $s_{CL}$: ' + str(s_cl) + ', $s_{ESO}$: ' + str(s_eso)+ ', R: ' + str(R))
-            plt.savefig("./plot_data_ladrc/control_" + str(order) + "_" + str(b0) + "_" + str(s_cl) + "_" + str(s_eso) + "_" + str(R) + ".png")
+            plt.savefig(plotdir + "/control_" + str(order) + "_" + str(b0) + "_" + str(s_cl) + "_" + str(s_eso) + "_" + str(R) + ".png")
             plt.clf()
 
             e = r - y
@@ -77,7 +88,7 @@ if os.path.isdir("sim_data_ladrc") and len(os.listdir("sim_data_ladrc")) > 0:
             performance['variability'].append(variability)
 
     df = DataFrame(performance)
-    df.to_csv('performance_data_ladrc.csv', index=False)
+    df.to_csv(currentdir + '/performance_data_ladrc.csv', index=False)
 
 else:
-    print("No results to plot and evaluate.")
+    print("No data to plot and evaluate.")

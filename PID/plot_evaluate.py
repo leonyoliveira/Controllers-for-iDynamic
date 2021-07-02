@@ -21,7 +21,7 @@ if os.path.isdir("sim_data_pid") and len(os.listdir("sim_data_pid")) > 0:
             performance['Kd'].append(kd)
 
             df = pd.read_csv("./sim_data_pid/" + x)
-            df = df[df['t'] < 180]
+            df = df[df['t'] < 15]
             t = df['t']
             r = df['r(t)']
             y = df['y(t)']
@@ -62,7 +62,7 @@ if os.path.isdir("sim_data_pid") and len(os.listdir("sim_data_pid")) > 0:
             goodhart = alpha1 * e1 + alpha2 * e2 + alpha3 * e3
             performance['goodhart'].append(goodhart)
 
-            beta = 1.5
+            beta = 1
 
             rbemce = iae + (beta / N) * sum(u)
             performance['rbemce'].append(rbemce)
@@ -78,4 +78,4 @@ if os.path.isdir("sim_data_pid") and len(os.listdir("sim_data_pid")) > 0:
     df.to_csv('performance_data_pid.csv', index=False)
 
 else:
-    print("No results to plot and evaluate.")
+    print("No data to plot and evaluate.")

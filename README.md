@@ -18,7 +18,9 @@ Included controllers:
 * PID
 * Linear ADRC
 
-Inside the controllers' folder, there's two files you can execute: the 'main.py' file runs the simulation itself, and 'plot\_evaluate.py' calculates performance indexes and plot the simulation data. The perfomance indexes used are:
+Scripts with name finished in "_gui_" run an graphic user interface to set the controller parameters.
+
+Scripts with name finished in "_plot\_evaluate_" saves graphics of control signal and output signal from simulations, and calculate it's following perfomance indexes:
 
 * IAE
 * ISE

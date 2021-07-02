@@ -2,7 +2,9 @@ import os, sys
 currentdir = os.path.dirname(os.path.realpath(__file__))
 parentdir = os.path.dirname(currentdir)
 sys.path.append(parentdir)
+datadir = os.path.join(currentdir, "sim_data_ladrc")
 
+import random
 from ControlLib import *
 from runkut4_adrc import *
 from functools import partial
@@ -17,9 +19,10 @@ class LADRC(Control):
 		self.update_LADRC(order, s_cl, s_eso, b0, R)
 		self.v_t = np.zeros((self.order, 1))
 		self.x_t = np.zeros((self.order+1, 1))
-		self.filename = "sim_data_ladrc/" + str(order) + "_" + str(b0) + "_" + str(s_cl) + "_" + str(s_eso) + "_" + str(R) + "_" + ".csv"
-		if not os.path.isdir("sim_data_ladrc"):
-			os.mkdir("sim_data_ladrc")
+		self.sp = -1
+		self.filename = datadir + "/" + str(order) + "_" + str(b0) + "_" + str(s_cl) + "_" + str(s_eso) + "_" + str(R) + "_" + ".csv"
+		if not os.path.isdir(datadir):
+			os.mkdir(datadir)
 		with open(self.filename, 'w') as file:
 			fields = ['t', 'r(t)', 'y(t)', 'u(t)']
 			writer = csv.DictWriter(file, fieldnames=fields)
@@ -31,6 +34,9 @@ class LADRC(Control):
 		self.b0 = b0
 		self.R = R
 		self.A, self.B, self.C, self.A_td, self.B_td, self.K, self.L = self.ADRC_matrices()
+
+	def update_setpoint(self, sp):
+		self.sp = sp
 
 	def ADRC_matrices(self):
 		A = np.zeros((self.order+1, self.order+1))
@@ -50,10 +56,14 @@ class LADRC(Control):
 		L[self.order][0] = math.comb(self.order+1, self.order+1) * math.pow(self.s_eso, self.order+1)
 		return A, B, C, A_td, B_td, K, L
 
+	def set_point(self):
+		return self.sp
+
 	def control(self):
+		yn = self.y() + random.uniform(-0.05,0.05) * self.r()
 		ltd = partial(linear_tracking_differentiator, self.A_td, self.B_td, self.r())
 		self.v_t = runkut4(ltd, self.v_t, self.T)
-		leso = partial(linear_extended_state_observer, self.A, self.B, self.L, self.u(), self.y())
+		leso = partial(linear_extended_state_observer, self.A, self.B, self.L, self.u(), yn)
 		self.x_t = runkut4(leso, self.x_t, self.T)
 
 		u0 = 0

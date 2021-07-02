@@ -2,6 +2,7 @@ import os, sys
 currentdir = os.path.dirname(os.path.realpath(__file__))
 parentdir = os.path.dirname(currentdir)
 sys.path.append(parentdir)
+datadir = os.path.join(currentdir, "sim_data_ladrc")
 
 from ControlLib import *
 import csv
@@ -11,18 +12,25 @@ class PID(Control):
         super().__init__(T=T, order=order)
         self.update_gains(Kp, Ki, Kd)
         self.int_error = 0
-        self.filename = "sim_data_pid/" + str(Kp) + "_" + str(Ki) + "_" + str(Kd) + "_" + ".csv"
-        if not os.path.isdir("sim_data_pid"):
-            os.mkdir("sim_data_pid")
+        self.sp = -1
+        self.filename = datadir + "/" + str(Kp) + "_" + str(Ki) + "_" + str(Kd) + "_" + ".csv"
+        if not os.path.isdir(datadir):
+            os.mkdir(datadir)
         with open(self.filename, 'w') as file:
             fields = ['t', 'r(t)', 'y(t)', 'u(t)']
             writer = csv.DictWriter(file, fieldnames=fields)
             writer.writeheader()
 
+    def update_setpoint(self, sp):
+        self.sp = sp
+
     def update_gains(self, Kp, Ki, Kd):
         self.Kp = Kp
         self.Ki = Ki
         self.Kd = Kd
+
+    def set_point(self):
+        return self.sp
 
     def control(self):
         self.int_error += (self.e() * self.T)
