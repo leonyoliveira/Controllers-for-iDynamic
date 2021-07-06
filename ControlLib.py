@@ -34,6 +34,9 @@ class Control:
 	def control(self):
 		return 0
 
+	def stop(self):
+		return 0
+
 	def apply(self, controlSignal):
 		self._u.rotate(-1)
 		self._u[-1] = controlSignal
@@ -90,6 +93,11 @@ class RemoteControl:
 				await websocket.send('set input|'+f"{u}")
 				print('%.4f %.4f %.4f %.4f'%(self.controller.time, ref, out, u))				
 
+				stop = self.controller.stop()
+				if stop:
+					await websocket.send('stop')
+					print("Server closed.")
+
 			except:
 				print('System not active...') if self.verbose else None
 
@@ -97,12 +105,5 @@ class RemoteControl:
 		print("Starting server...")
 		server = websockets.serve(self.serverLoop, "localhost", 6660)
 		print("Server started!")
-		#try:
 		asyncio.get_running_loop().run_until_complete(server)
-			#asyncio.get_event_loop().run_forever()
-'''
-		except asyncio.CancelledError:
-			print("Server closed.")
-			asyncio.get_event_loop().stop()
-			server.close()
-'''
+		#asyncio.get_event_loop().run_forever()
