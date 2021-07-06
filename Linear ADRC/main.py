@@ -14,7 +14,7 @@ from ladrc import *
 
 kivy.require('1.9.1')
 nest_asyncio.apply()
-Window.size = (300, 250)
+Window.size = (250, 280)
 
 class TelaLogin(GridLayout):
     def __init__(self, **kwargs):
@@ -67,9 +67,18 @@ class TelaLogin(GridLayout):
         self.update = Button(text='Start Server')
         self.update.bind(on_press=self.update_LADRC)
         self.add_widget(self.update)
+
+        self.stop = Button(text='Stop Server', background_color=[1,0,0,1])
+        self.stop.bind(on_press=self.stop_sim)
+        self.add_widget(self.stop)
     
     def update_sp(self, instance):
         self.controller.update_setpoint(float(self.ref.text))
+
+    def stop_sim(self, instance):
+        self.controller.stop_press()
+        self.update.text = 'Start Server'
+        self.started = 0
 
     def update_LADRC(self, instance):
         if not self.started:

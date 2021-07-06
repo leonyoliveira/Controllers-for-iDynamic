@@ -2,7 +2,8 @@ import os, sys
 currentdir = os.path.dirname(os.path.realpath(__file__))
 parentdir = os.path.dirname(currentdir)
 sys.path.append(parentdir)
-datadir = os.path.join(currentdir, "sim_data_ladrc")
+system = "temp_test"
+datadir = os.path.join(currentdir, ("data_" + system))
 
 import random
 from ControlLib import *
@@ -20,6 +21,7 @@ class LADRC(Control):
 		self.v_t = np.zeros((self.order, 1))
 		self.x_t = np.zeros((self.order+1, 1))
 		self.sp = -1
+		self.stop_flag = 0
 		self.filename = datadir + "/" + str(order) + "_" + str(b0) + "_" + str(s_cl) + "_" + str(s_eso) + "_" + str(R) + "_" + ".csv"
 		if not os.path.isdir(datadir):
 			os.mkdir(datadir)
@@ -59,6 +61,12 @@ class LADRC(Control):
 	def set_point(self):
 		return self.sp
 
+	def stop(self):
+		return self.stop_flag
+
+	def stop_press(self):
+		self.stop_flag = 1
+
 	def control(self):
 		yn = self.y() + random.uniform(-0.05,0.05) * self.r()
 		ltd = partial(linear_tracking_differentiator, self.A_td, self.B_td, self.r())
@@ -70,7 +78,12 @@ class LADRC(Control):
 		for i in range(self.order):
 			u0 += (self.v_t[i] - self.x_t[i]) * self.K[i]
 		u = (u0 - self.x_t[self.order]) / self.b0
-		
+		'''
+		if u[0] < 0:
+			u[0] = 0
+		elif u[0] > 1:
+			u[0] = 1
+		'''
 		with open(self.filename, 'a+') as file:
 			fields = ['t', 'r(t)', 'y(t)', 'u(t)']
 			writer = csv.DictWriter(file, fieldnames=fields)
