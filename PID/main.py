@@ -12,13 +12,15 @@ from pid import *
 
 kivy.require('1.9.1')
 nest_asyncio.apply()
-Window.size = (300, 200)
+Window.size = (250, 220)
 
 class TelaLogin(GridLayout):
     def __init__(self, **kwargs):
         super(TelaLogin, self).__init__(**kwargs)
         self.cols = 1
         self.started = 0
+        self.run_serv = 0
+        self.rc = None
         self.controller = None
 
         self.setpoint_box = BoxLayout()
@@ -52,11 +54,11 @@ class TelaLogin(GridLayout):
         self.update = Button(text='Start Server')
         self.update.bind(on_press=self.update_PID)
         self.add_widget(self.update)
-        '''
-        self.stop = Button(text='Stop', background_color=[1,0,0,1])
+        
+        self.stop = Button(text='Stop Server', background_color=[1,0,0,1])
         self.stop.bind(on_press=self.stop_sim)
         self.add_widget(self.stop)
-        '''
+        
 
     def update_sp(self, instance):
         self.controller.update_setpoint(float(self.ref.text))
@@ -64,20 +66,24 @@ class TelaLogin(GridLayout):
     def update_PID(self, instance):
         if not self.started:
             self.controller = PID(T=0.1, order=2, Kp=float(self.Kp.text), Ki=float(self.Ki.text), Kd=float(self.Kd.text))
-            rc = RemoteControl(self.controller)
-            self.task = asyncio.create_task(rc.run())
-            asyncio.get_running_loop().run_until_complete(self.task)
+            if not self.run_serv:
+                self.rc = RemoteControl(self.controller)
+                self.task = asyncio.create_task(self.rc.run())
+                asyncio.get_running_loop().run_until_complete(self.task)
+                self.run_serv = 1
+            else:
+                self.rc.controller = self.controller
             self.update.text = 'Update'
             self.started = 1
         else:
             print('Updating gains...')
             self.controller.update_gains(Kp=float(self.Kp.text), Ki=float(self.Ki.text), Kd=float(self.Kd.text))
-'''
+
     def stop_sim(self, instance):
-        print("cancelando essa bagaça")
-        self.task.cancel()
+        self.controller.stop_press()
+        self.update.text = 'Start Server'
         self.started = 0
-'''
+
 class MyApp(App):
     def build(self):
         self.title = 'iDynamic PID'

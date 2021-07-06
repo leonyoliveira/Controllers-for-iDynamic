@@ -3,15 +3,22 @@ import pandas as pd
 import os
 from pandas.core.frame import DataFrame
 
+system = "temp"
+currentdir = os.path.dirname(os.path.realpath(__file__))
+datadir = os.path.join(currentdir, ("data_" + system))
+plotdir = os.path.join(currentdir, ("plot_" + system))
+
+sim_time = 90
+
 performance = {'Kp': [], 'Ki': [], 'Kd': [], 'iae': [], 'ise': [], 'itae': [],
                 'goodhart': [], 'rbemce': [], 'rbmsemce': [], 'variability': []}
 
-if os.path.isdir("sim_data_pid") and len(os.listdir("sim_data_pid")) > 0:
+if os.path.isdir(datadir) and len(os.listdir(datadir)) > 0:
 
-    if not os.path.isdir("plot_data_pid"):
-        os.mkdir("plot_data_pid")
+    if not os.path.isdir(plotdir):
+        os.mkdir(plotdir)
 
-    for x in os.listdir("./sim_data_pid"):
+    for x in os.listdir(datadir):
 
         if x.endswith(".csv"):
 
@@ -20,8 +27,8 @@ if os.path.isdir("sim_data_pid") and len(os.listdir("sim_data_pid")) > 0:
             performance['Ki'].append(ki)
             performance['Kd'].append(kd)
 
-            df = pd.read_csv("./sim_data_pid/" + x)
-            df = df[df['t'] < 15]
+            df = pd.read_csv(datadir + "/" + x)
+            df = df[df['t'] < sim_time]
             t = df['t']
             r = df['r(t)']
             y = df['y(t)']
@@ -29,16 +36,18 @@ if os.path.isdir("sim_data_pid") and len(os.listdir("sim_data_pid")) > 0:
 
             plt.plot(t, y, 'r', t, r, '--g')
             plt.xlabel('tempo(s)')
+            plt.xticks([0, 10, 20, 30, 40, 50, 60, 70, 80, 90])
             plt.legend(['saída - y(t)', 'referência - r(t)'])
             plt.title('PID' + ' - Kp: ' + str(kp) + ', Ki: ' + str(ki) + ', Kd: ' + str(kd))
-            plt.savefig("./plot_data_pid/output_" + str(kp) + "_" + str(ki) + "_" + str(kd) + ".png")
+            plt.savefig(plotdir + "/output_" + str(kp) + "_" + str(ki) + "_" + str(kd) + ".png")
             plt.clf()
 
             plt.plot(t, u, 'b')
             plt.xlabel('tempo(s)')
+            plt.xticks([0, 10, 20, 30, 40, 50, 60, 70, 80, 90])
             plt.legend(['sinal de controle - u(t)'])
             plt.title('PID' + ' - Kp: ' + str(kp) + ', Ki: ' + str(ki) + ', Kd: ' + str(kd))
-            plt.savefig("./plot_data_pid/control_" + str(kp) + "_" + str(ki) + "_" + str(kd) + ".png")
+            plt.savefig(plotdir + "/control_" + str(kp) + "_" + str(ki) + "_" + str(kd) + ".png")
             plt.clf()
 
             e = r - y
@@ -75,7 +84,7 @@ if os.path.isdir("sim_data_pid") and len(os.listdir("sim_data_pid")) > 0:
             performance['variability'].append(variability)
 
     df = DataFrame(performance)
-    df.to_csv('performance_data_pid.csv', index=False)
+    df.to_csv(currentdir + '/performance_' + system + '.csv', index=False)
 
 else:
     print("No data to plot and evaluate.")
