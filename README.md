@@ -12,6 +12,7 @@ First, you should install the following libraries to run the scripts:
 * pip install kivy.deps.gstreamer
 * pip install kivy.deps.angle
 * pip install pandas
+* pip install nest-asyncio
 
 Included controllers:
 
