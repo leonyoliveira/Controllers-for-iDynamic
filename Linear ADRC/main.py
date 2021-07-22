@@ -13,12 +13,28 @@ from kivy.uix.button import Button
 from ladrc import *
 
 kivy.require('1.9.1')
+# This will help to run the GUI parallel with websocket server
 nest_asyncio.apply()
+
+# Setting window width and height
 Window.size = (250, 280)
 
 class TelaLogin(GridLayout):
+    # This class will create the main screen of the GUI.
+
     def __init__(self, **kwargs):
         super(TelaLogin, self).__init__(**kwargs)
+        
+        '''
+        We'll define cols = 1 so all elements will be place below one another.
+        Variable 'started' will indicate if the server was already started or not. (Stop server function not working propertly yet.)
+        'controller' and 'rc' will instantiate the objects from ControlLib classses.
+        The following blocks of code will instantiate the objects needed to change set point values and ADRC parameters, adding the widgets to the main screen.
+        For each ADRC parameter, there'll be container with its label and a input box to change its value.
+        'Set' button is added to change reference value on pressed; 'Start/Update Server' change the controller values and starts the server, if it still not started;
+            'Stop Server' will stop the websocket server code (Not working yet).
+        '''
+
         self.cols = 1
         self.started = 0
         self.controller = None
@@ -73,31 +89,40 @@ class TelaLogin(GridLayout):
         self.add_widget(self.stop)
     
     def update_sp(self, instance):
+        # This function will be called when 'Set' button is pressed, changing set point value.
         self.controller.update_setpoint(float(self.ref.text))
 
     def stop_sim(self, instance):
+        # This function will be called when 'Stop Server' button is pressed, stopping server from running. (Not working propertly yet)
         self.controller.stop_press()
         self.update.text = 'Start Server'
         self.started = 0
 
     def update_LADRC(self, instance):
+        # This function will be called when 'Stop Server' button is pressed
         if not self.started:
-            self.controller = LADRC(T=0.1, order=int(self.order.text), s_cl=float(self.s_cl.text), s_eso=float(self.s_eso.text), b0=float(self.b0.text), R=float(self.R.text))
+            # If server isn't running yet, it creates a new instance of ADRC, and runs the server on a task.
+            self.controller = LADRC(T=0.1, order=3, adrc_order=int(self.order.text), s_cl=float(self.s_cl.text), s_eso=float(self.s_eso.text), b0=float(self.b0.text), R=float(self.R.text))
             self.rc = RemoteControl(self.controller)
             task = loop.create_task(self.rc.run())
             loop.run_until_complete(task)
-            self.update.text = 'Update'
+            self.update.text = 'Update Parameters'
             self.started = 1
         else:
+            # If server is already running, this will only update ADRC parameters.
             print('Updating parameters...')
-            self.controller.update_LADRC(order=int(self.order.text), s_cl=float(self.s_cl.text), s_eso=float(self.s_eso.text), b0=float(self.b0.text), R=float(self.R.text))
+            self.controller.update_LADRC(adrc_order=int(self.order.text), s_cl=float(self.s_cl.text), s_eso=float(self.s_eso.text), b0=float(self.b0.text), R=float(self.R.text))
 
 class MyApp(App):
+    '''
+    This class will instantiate an kivy App, containing an object of TelaLogin class.
+    '''
     def build(self):
         self.title = 'iDynamic LADRC'
         return TelaLogin()
 
 if __name__ == '__main__':
+    # The 'MyApp' object is started inside an asyncio loop, so it can be executed along the websocket server, asynchronously.
     loop = asyncio.get_event_loop()
     loop.run_until_complete(MyApp().async_run(async_lib='asyncio'))
     loop.stop()
